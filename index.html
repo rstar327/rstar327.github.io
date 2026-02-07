@@ -1,9 +1,722 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Website</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rstar327 — Full Stack Developer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111119;
+            --bg-card: #16161f;
+            --text-primary: #e8e8ef;
+            --text-secondary: #8a8a9a;
+            --text-muted: #55556a;
+            --accent: #7c5cff;
+            --accent-glow: rgba(124, 92, 255, 0.3);
+            --accent-secondary: #00d4aa;
+            --accent-warm: #ff6b6b;
+            --border: rgba(255,255,255,0.06);
+            --border-hover: rgba(124, 92, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Ambient glow */
+        .ambient-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-1 { top: -200px; left: -100px; background: var(--accent); }
+        .glow-2 { bottom: -200px; right: -100px; background: var(--accent-secondary); }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f5f7;
+            --bg-secondary: #eaeaef;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #555570;
+            --text-muted: #8888a0;
+            --accent: #6b46e5;
+            --accent-glow: rgba(107, 70, 229, 0.2);
+            --accent-secondary: #00b894;
+            --accent-warm: #e74c3c;
+            --border: rgba(0,0,0,0.08);
+            --border-hover: rgba(107, 70, 229, 0.3);
+        }
+
+        [data-theme="light"] body::before { opacity: 0.015; }
+        [data-theme="light"] .ambient-glow { opacity: 0.04; }
+        [data-theme="light"] nav { background: rgba(245, 245, 247, 0.85); }
+        [data-theme="light"] .tech-dot[style*="background:#000"] { background: #222 !important; }
+        [data-theme="light"] .tech-dot[style*="background:#ffffff"] { background: #333 !important; }
+        [data-theme="light"] .tech-dot[style*="background:#2D3748"] { background: #2D3748 !important; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--border-hover);
+            color: var(--accent);
+        }
+
+        .theme-toggle .icon-sun { display: none; }
+        .theme-toggle .icon-moon { display: block; }
+        [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+        [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 1.2rem 0;
+            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 15, 0.8);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        /* Main content */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+        }
+
+        .hero-content {
+            width: 100%;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(124, 92, 255, 0.1);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: 100px;
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-secondary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.1s forwards;
+            opacity: 0;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.8;
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease 0.2s forwards;
+            opacity: 0;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            animation: fadeInUp 0.8s ease 0.3s forwards;
+            opacity: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.8rem;
+            border-radius: 12px;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--border-hover);
+            background: rgba(124, 92, 255, 0.05);
+        }
+
+        /* Section styles */
+        section {
+            padding: 6rem 0;
+        }
+
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 550px;
+            font-weight: 300;
+            margin-bottom: 3rem;
+        }
+
+        /* What Drives Me */
+        .drives-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .drive-card {
+            padding: 1.8rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drive-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .drive-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .drive-card:hover::before { opacity: 1; }
+
+        .drive-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .drive-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .drive-card p {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        /* Tech Stack */
+        .tech-category {
+            margin-bottom: 2.5rem;
+        }
+
+        .tech-category-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tech-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .tech-icon {
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            font-weight: 400;
+            cursor: default;
+        }
+
+        .tech-icon:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            background: rgba(124, 92, 255, 0.06);
+        }
+
+        .tech-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+
+
+
+
+        /* Quote Section */
+        .quote-section {
+            text-align: center;
+            padding: 5rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .quote {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 700px;
+            margin: 0 auto 1rem;
+            line-height: 1.8;
+        }
+
+        .quote-author {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .nav-links { display: none; }
+            .hero-actions { flex-direction: column; }
+            .drives-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-    <p>Welcome to my personal website.</p>
+
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">rstar327</a>
+        <div style="display:flex;align-items:center;gap:1.5rem;">
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#stack">Tech Stack</a></li>
+                <li><a href="https://github.com/rstar327" target="_blank">GitHub ↗</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-badge">Available for collaboration</div>
+            <h1>Turning Ideas into<br><span class="gradient-text">AI-Powered Digital</span><br>Experiences</h1>
+            <p class="hero-description">Full Stack Developer specializing in building scalable, high-performance web applications. I work at the intersection of modern development practices and cutting-edge AI tools.</p>
+            <div class="hero-actions">
+                <a href="https://github.com/rstar327" target="_blank" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View GitHub
+                </a>
+                <a href="#about" class="btn btn-outline">Learn More →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About / What Drives Me -->
+<section id="about">
+    <div class="container">
+        <div class="fade-in">
+            <span class="section-label">// About</span>
+            <h2 class="section-title">What Drives Me</h2>
+            <p class="section-desc">Transforming ideas into production-ready applications with a focus on quality, performance, and modern AI-augmented workflows.</p>
+        </div>
+
+        <div class="drives-grid">
+            <div class="drive-card fade-in">
+                <div class="drive-icon">🚀</div>
+                <h3>End-to-End Ownership</h3>
+                <p>From initial concept to production deployment, I take full responsibility for delivering complete solutions.</p>
+            </div>
+            <div class="drive-card fade-in">
+                <div class="drive-icon">🤖</div>
+                <h3>AI-Augmented Development</h3>
+                <p>Embracing Claude, Copilot, and modern AI tools to accelerate development and improve code quality.</p>
+            </div>
+            <div class="drive-card fade-in">
+                <div class="drive-icon">🏗️</div>
+                <h3>Architecture-First Thinking</h3>
+                <p>Building maintainable, scalable systems with clean architecture patterns and best practices.</p>
+            </div>
+            <div class="drive-card fade-in">
+                <div class="drive-icon">⚡</div>
+                <h3>Performance Obsessed</h3>
+                <p>Writing clean, efficient code that delivers results and exceptional user experiences.</p>
+            </div>
+            <div class="drive-card fade-in">
+                <div class="drive-icon">📚</div>
+                <h3>Continuous Learner</h3>
+                <p>Always exploring emerging technologies and best practices to stay ahead of the curve.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tech Stack -->
+<section id="stack">
+    <div class="container">
+        <div class="fade-in">
+            <span class="section-label">// Tech Stack</span>
+            <h2 class="section-title">Technologies & Tools</h2>
+            <p class="section-desc">A comprehensive toolkit for building modern, scalable applications from frontend to deployment.</p>
+        </div>
+
+        <div class="tech-category fade-in">
+            <div class="tech-category-title">Frontend Development</div>
+            <div class="tech-icons">
+                <div class="tech-icon"><span class="tech-dot" style="background:#000"></span>Next.js</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#61DAFB"></span>React</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#4FC08D"></span>Vue.js</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#DD0031"></span>Angular</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#3178C6"></span>TypeScript</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#F7DF1E"></span>JavaScript</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#06B6D4"></span>Tailwind CSS</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#CC6699"></span>Sass</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#646CFF"></span>Vite</div>
+            </div>
+        </div>
+
+        <div class="tech-category fade-in">
+            <div class="tech-category-title">Backend Development</div>
+            <div class="tech-icons">
+                <div class="tech-icon"><span class="tech-dot" style="background:#3776AB"></span>Python</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#339933"></span>Node.js</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#777BB4"></span>PHP</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#ffffff"></span>Flask</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#009688"></span>FastAPI</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#FF2D20"></span>Laravel</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#ffffff"></span>Express.js</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#092E20"></span>Django</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#E0234E"></span>NestJS</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#E10098"></span>GraphQL</div>
+            </div>
+        </div>
+
+        <div class="tech-category fade-in">
+            <div class="tech-category-title">Database & BaaS</div>
+            <div class="tech-icons">
+                <div class="tech-icon"><span class="tech-dot" style="background:#3FCF8E"></span>Supabase</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#FFCA28"></span>Firebase</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#4169E1"></span>PostgreSQL</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#47A248"></span>MongoDB</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#4479A1"></span>MySQL</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#DC382D"></span>Redis</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#2D3748"></span>Prisma</div>
+            </div>
+        </div>
+
+        <div class="tech-category fade-in">
+            <div class="tech-category-title">DevOps & Cloud</div>
+            <div class="tech-icons">
+                <div class="tech-icon"><span class="tech-dot" style="background:#F05032"></span>Git</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#2496ED"></span>Docker</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#2088FF"></span>GitHub Actions</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#326CE5"></span>Kubernetes</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#FF9900"></span>AWS</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#4285F4"></span>Google Cloud</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#ffffff"></span>Vercel</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#009639"></span>Nginx</div>
+            </div>
+        </div>
+
+        <div class="tech-category fade-in">
+            <div class="tech-category-title">Tools & Productivity</div>
+            <div class="tech-icons">
+                <div class="tech-icon"><span class="tech-dot" style="background:#007ACC"></span>VS Code</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#FF6C37"></span>Postman</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#F24E1E"></span>Figma</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#FCC624"></span>Linux</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#0052CC"></span>Jira</div>
+                <div class="tech-icon"><span class="tech-dot" style="background:#ffffff"></span>Notion</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Quote -->
+<section class="quote-section">
+    <div class="container fade-in">
+        <p class="quote">"The best way to predict the future is to invent it."</p>
+        <span class="quote-author">— Alan Kay</span>
+        <br><br>
+        <p class="quote">"Code is like humor. When you have to explain it, it's bad."</p>
+        <span class="quote-author">— Cory House</span>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="footer-links">
+            <a href="https://github.com/rstar327" target="_blank">GitHub</a>
+        </div>
+        <p class="footer-text">Built with passion. Let's build something amazing together.</p>
+    </div>
+</footer>
+
+<script>
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, index * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme');
+    if (saved) html.setAttribute('data-theme', saved);
+
+    toggle.addEventListener('click', () => {
+        const current = html.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+
+    // Smooth nav background on scroll
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            nav.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+        } else {
+            nav.style.borderBottomColor = 'rgba(255,255,255,0.03)';
+        }
+    });
+</script>
+
 </body>
 </html>
